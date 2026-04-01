@@ -21,14 +21,22 @@ export async function getLogins() {
     }
 }
 
-export function verifyToken(req) {
+export async function verifyToken(req) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         throw new Error('No token provided');
     }
     const token = authHeader.split(' ')[1];
     try {
-        return jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const { management, admins, mods } = await getLogins();
+        const allUsers = [...(management || []), ...(admins || []), ...(mods || [])];
+        
+        if (!allUsers.some(u => u.username.toLowerCase() === decoded.username.toLowerCase())) {
+            throw new Error('User revoked');
+        }
+        
+        return decoded;
     } catch (err) {
         throw new Error('Invalid or expired token');
     }
