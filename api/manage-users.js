@@ -47,10 +47,12 @@ export default async function handler(req, res) {
         if (req.method === 'POST') {
             let newAdmins = req.body.admins || [];
             let newMods = req.body.mods || [];
-            let newManagement = req.body.management || loginsData.management || [];
+            
+            let newManagement = req.body.management !== undefined ? req.body.management : (loginsData.management || []);
 
             if (!Array.isArray(newAdmins)) return res.status(400).json({ error: 'Invalid admin data' });
             if (!Array.isArray(newMods)) return res.status(400).json({ error: 'Invalid mod data' });
+            if (!Array.isArray(newManagement)) return res.status(400).json({ error: 'Invalid management data' });
 
             const allUsers = [...newManagement, ...newAdmins, ...newMods];
             const seenUsernames = new Set();
@@ -85,7 +87,11 @@ export default async function handler(req, res) {
                 [loginsData]
             );
 
-            await auditLog(decoded, "UPDATE_USERS", { admins: newAdmins.length, mods: newMods.length });
+            await auditLog(decoded, "UPDATE_USERS", { 
+                management: newManagement.length,
+                admins: newAdmins.length, 
+                mods: newMods.length 
+            });
             
             return res.status(200).json({ success: true });
         }

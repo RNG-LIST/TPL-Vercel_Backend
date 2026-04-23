@@ -8,3 +8,4 @@ node_modules/
 data/
 /api/_logins.json
 .env
+.README.md
