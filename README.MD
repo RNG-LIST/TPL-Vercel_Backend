@@ -1,14 +1,14 @@
--These docs are out of date since I'm a bit lazy on changing these to include all recent changes
+-These docs are out of date since I'm a bit lazy on changing these to include all recent changes, if you're confused about something when setting up your own list using this then dm "ammytundra." for help <3
 # The Piss List
 
 An improved Fork of the **Shitty List** template, developed by **Anticroom** for better level management and useablity.
 
 ## Improvements
 
-* **PostgreSQL Support:** Replaced JSON storage with a database for better reliability.
+* **PostgreSQL:** Replaced JSON storage with a database for better reliability.
+* **Staff Management:** Management page to manage all list editors as owner. (/#/manage)
 * **Admin Panel:** Integrated page to add, edit, and reorder levels. (/#/admin)
 * **Audit Logging:** Staff actions are logged to Discord via webhooks.
-* **Staff Management:** Management page to manage all list editors as owner. (/#/manage)
 * **Dual Lists:** Two lists integrated in one with being able to switch between both on the navbar.
 
 ---
@@ -19,7 +19,7 @@ An improved Fork of the **Shitty List** template, developed by **Anticroom** for
 
 1.  Create a new project on [Supabase](https://supabase.com/).
 2.  Navigate to the **SQL Editor** in the left sidebar.
-3.  Paste the following script and click **Run**:
+3.  Paste this script and click **Run** to setup the database used for the list:
 
 ```sql
 CREATE TABLE public.levels (
@@ -91,20 +91,22 @@ ALTER TABLE public.system DISABLE ROW LEVEL SECURITY;
 
 ### 2. Environment Variables
 
-Create a `.env` file in your root directory. You will need these for local testing and Vercel deployment.
+Create a `.env` file in your projects root folder. You will need these for local testing and Vercel deployment.
 
 ```bash
-# security (create a random string of characters with www.random.org/strings)
+# a random string used to create bareer tokens
 JWT_SECRET=[YOURJWTSTRING]
 
-# database (get this from Supabase: project settings > database > connection string > node.js)
-POSTGRES_URL=postgresql://postgres.[PROJECTID]@[REGION].pooler.supabase.com:6543/postgres
+# transaction pooler for the database
+POSTGRES_URL=postgresql://
 
 # webhooks
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/
 DISCORD_UPDATE_WEBHOOK_URL=https://discord.com/api/webhooks/
 DISCORD_COMPLETION_WEBHOOK_URL=https://discord.com/api/webhooks/
 DISCORD_UPDATE_WEBHOOK_URL_2=https://discord.com/api/webhooks/
+
+# turnstile secret from Cloudflare for spam prevention
 TURNSTILE_SECRET=0x4AAAAAAXXXXXXXXXXXXXXXXXX
 
 ```
@@ -113,28 +115,29 @@ TURNSTILE_SECRET=0x4AAAAAAXXXXXXXXXXXXXXXXXX
 * **DISCORD_UPDATE_WEBHOOK_URL**: Public channel for level placements/changes the first list.
 * **DISCORD_UPDATE_WEBHOOK_URL_2**: Public channel for level placements/changes the second list.
 * **DISCORD_COMPLETION_WEBHOOK_URL**: Public channel for new records.
-* **TURNSTILE_SECRET:** Turnstile secret used for preventing users from botting large amounts of submissions
+* **TURNSTILE_SECRET:** Turnstile secret used for preventing users from botting submissions,
+create one at [Cloudflare](https://dash.cloudflare.com/sign-up?to=/:account/turnstile).
+
+* **POSTGRES_URL:** A database transaction pooler using Supabase to store all the data served to the list. \
+Go to your Supabase project, press the "Connect" button on the top bar, press the "Direct" tab, then select transaction pooler. You'll See a connection string below that similar to: `postgresql://postgres.xXxXxXxXxXxXxXxXx:[YOUR-PASSWORD]@aws-1-us-east-2.pooler.supabase.com:6543/postgres`\
+Copy that and set it as your  POSTGRES_URL env, but make sure to use the password you used when creating the Supabase project between the password brackets (make sure to delete the surrounding brackets afterwards)
 
 ### 3. Vercel Deployment
 
 1. Push this code to a GitHub repository.
 2. Go to [Vercel](https://vercel.com/) and create a **New Project**.
 3. Import your GitHub repository.
-4. **Add Environment Variables:**
-* On the "Configure Project" screen, look for **Environment Variables**.
-* Copy the keys and values from your `.env` file and add them one by one.
-* Alternatively, after the project is created, go to **Settings > Environment Variables** and add them there.
-
+4. Add environment variables in the **"Environment Variables"** tab on your Vercel project
 
 5. Click **Deploy**.
 
 ### 4. Creating the First Owner Account
 
-To access the admin panel, you must manually seed the first management account in the database:
+To access the admin panel, you must manually create the first management account in the database:
 
 1. Go to the **Table Editor** in Supabase.
 2. Select the `system` table.
-3. Edit the `_logins` row and update the `management` array to include your desired login:
+3. Edit the `_logins` row and update the `management` array to include your desired login as a owner:
 
 ```json
 {
@@ -148,8 +151,9 @@ To access the admin panel, you must manually seed the first management account i
   "admins": []
   "mods": []
 }
-
 ```
+
+Once your account is created, go to /#/manage and login using the credentials you created from the previous step then you're done.
 
 ---
 
